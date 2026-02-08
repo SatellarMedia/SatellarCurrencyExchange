@@ -1,0 +1,176 @@
+﻿
+> currency-exchange@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.1.6 (Turbopack)
+
+  Creating an optimized production build ...
+node.exe : Error: 
+Cannot apply unknown 
+utility class `focus:b
+order-accent/50`
+At line:1 char:1
++ & "C:\Program Files\
+nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~
+    + CategoryInfo    
+          : 
+NotSpecified: (Err    
+or: Cannot 
+a...rder-ac    
+cent/50`:String) [], 
+R    emoteException
+    + 
+FullyQualifiedErrorI  
+  d : 
+NativeCommandError
+ 
+    [2m[at 
+onInvalidCandidate (C:
+\Users\Satellar\Videos
+\test app\node_modules
+\tailwindcss\dist\lib.
+js:21:1511)][0m
+    [2m[at Te (C:\Use
+rs\Satellar\Videos\tes
+t app\node_modules\tai
+lwindcss\dist\lib.js:1
+6:36652)][0m
+    [2m[at C:\Users\S
+atellar\Videos\test ap
+p\node_modules\tailwin
+dcss\dist\lib.js:21:35
+5][0m
+    [2m[at Rr (C:\Use
+rs\Satellar\Videos\tes
+t app\node_modules\tai
+lwindcss\dist\lib.js:3
+:1718)][0m
+    [2m[at _ (C:\User
+s\Satellar\Videos\test
+ app\node_modules\tail
+windcss\dist\lib.js:3:
+1377)][0m
+    [2m[at $e (C:\Use
+rs\Satellar\Videos\tes
+t app\node_modules\tai
+lwindcss\dist\lib.js:2
+1:172)][0m
+    [2m[at un (C:\Use
+rs\Satellar\Videos\tes
+t app\node_modules\tai
+lwindcss\dist\lib.js:3
+8:294)][0m
+    [2m[at async cn (
+C:\Users\Satellar\Vide
+os\test app\node_modul
+es\tailwindcss\dist\li
+b.js:38:631)][0m
+    [2m[at async Xr (
+C:\Users\Satellar\Vide
+os\test app\node_modul
+es\@tailwindcss\node\d
+ist\index.js:10:3417)]
+[0m
+    [2m[at async I (C
+:\Users\Satellar\Video
+s\test app\node_module
+s\@tailwindcss\postcss
+\dist\index.js:10:3977
+)][0m
+
+> Build error occurred
+Error: Turbopack 
+build failed with 1 
+errors:
+./app/globals.css
+Error evaluating 
+Node.js code
+CssSyntaxError: 
+tailwindcss: C:\Users\
+Satellar\Videos\test a
+pp\app\globals.css:1:1
+: Cannot apply 
+unknown utility class 
+`focus:border-accent/5
+0`
+    at Input.error (no
+de_modules/postcss/lib
+/input.js:135:16) [C:\
+Users\Satellar\Videos\
+test app\.next\build\c
+hunks\node_modules_fe6
+93df6._.js:4651:22]
+    at Root.error (nod
+e_modules/postcss/lib/
+node.js:146:32) [C:\Us
+ers\Satellar\Videos\te
+st app\.next\build\chu
+nks\node_modules_fe693
+df6._.js:928:38]
+    [at Object.Once (C
+:\Users\Satellar\Video
+s\test app\node_module
+s\@tailwindcss\postcss
+\dist\index.js:10:6911
+)]
+    at async 
+LazyResult.runAsync (n
+ode_modules/postcss/li
+b/lazy-result.js:293:1
+1) [C:\Users\Satellar\
+Videos\test app\.next\
+build\chunks\node_modu
+les_fe693df6._.js:6206
+:21]
+    at async 
+transform (turbopack:/
+//[turbopack-node]/tra
+nsforms/postcss.ts:70:
+34) [C:\Users\Satellar
+\Videos\test app\.next
+\build\chunks\[root-of
+-the-server]__51225daf
+._.js:146:36]
+    at async run (turb
+opack:///[turbopack-no
+de]/ipc/evaluate.ts:92
+:23) [C:\Users\Satella
+r\Videos\test app\.nex
+t\build\chunks\[root-o
+f-the-server]__974941e
+d._.js:443:31]
+
+Import trace:
+  Client Component 
+Browser:
+    ./app/globals.css 
+[Client Component 
+Browser]
+    ./app/layout.tsx 
+[Server Component]
+
+
+    at async 
+transform (turbopack:/
+//[turbopack-node]/tra
+nsforms/postcss.ts:70:
+34) [C:\Users\Satellar
+\Videos\test app\.next
+\build\chunks\[root-of
+-the-server]__51225daf
+._.js:146:36])
+    at async run (turb
+opack:///[turbopack-no
+de]/ipc/evaluate.ts:92
+:23) [C:\Users\Satella
+r\Videos\test app\.nex
+t\build\chunks\[root-o
+f-the-server]__974941e
+d._.js:443:31])
