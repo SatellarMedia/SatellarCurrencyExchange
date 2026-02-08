@@ -46,16 +46,20 @@ interface CurrencyContextType {
     holdings: Holdings;
     transactions: Transaction[];
     addTransaction: (type: 'BUY' | 'SELL', currency: Currency, amount: number, rate: number) => void;
+    updateHolding: (currency: Currency, amount: number) => void;
     profit: number; // Realized profit
     resetData: () => void;
+}
+
+// Helper to get basis
+export const getRateBasis = (currency: String) => {
+    return currency === 'MMK' ? 100000 : 1;
 }
 
 const defaultRates: Rates = {
     USD: { buy: 34.0, sell: 34.5 },
     CNY: { buy: 4.8, sell: 4.9 },
-    MMK: { buy: 0.015, sell: 0.016 }, // Approx rate, usually handled as 1000 MMK (?)
-    // Note: MMK rates often quoted as "per 1000" or similar. We'll store raw unit rate for calculation 
-    // but UI might need to adjust. For now, strict unit math.
+    MMK: { buy: 1500, sell: 1520 }, // NOW per 100,000 MMK
 };
 
 const defaultHoldings: Holdings = {
@@ -104,11 +108,32 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         setRatesState(newRates);
     };
 
-    const addTransaction = (type: 'BUY' | 'SELL', currency: Currency, amount: number, rate: number) => {
-        if (currency === 'THB') return; // Cannot buy/sell base currency against itself directly here
+    /**
+     * Directly update the holding for a specific currency.
+     * Use this for manual adjustments (Capital Edit).
+     */
+    const updateHolding = (currency: Currency, newAmount: number) => {
+        setHoldings(prev => {
+            const newHoldings = { ...prev, [currency]: newAmount };
+            // If updating THB, we might strictly mean the capital. 
+            // If updating Foreign, we might want to reset WAC? 
+            // For now, just update amount. WAC remains as history unless reset.
+            if (currency !== 'THB' && newAmount === 0) {
+                // Optional: Reset WAC if clearing stock?
+                // setAverageCosts(prevC => ({ ...prevC, [currency]: 0 }));
+            }
+            return newHoldings;
+        });
+    };
 
-        const totalTHB = amount * rate;
-        // Check if crypto is available (client-side)
+    const addTransaction = (type: 'BUY' | 'SELL', currency: Currency, amount: number, rate: number) => {
+        if (currency === 'THB') return;
+
+        // Apply Basis: MMK rate is "Per 100,000", others "Per 1".
+        // Total THB = (Amount / Basis) * Rate
+        const basis = getRateBasis(currency);
+        const totalTHB = (amount / basis) * rate;
+
         const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString();
 
         const newTx: Transaction = {
@@ -130,20 +155,26 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
 
             if (type === 'BUY') {
                 // Buying Foreign: Shop gives THB, gets Foreign
-                // Update WAC (Weighted Average Cost)
-                // New Cost = ((Old Amt * Old Cost) + (New Amt * New Rate)) / (Old Amt + New Amt)
+                // WAC Calculation:
+                // New Cost = ((Old Amt * Old Cost) + (Total THB Value)) / (Old Amt + New Amt)
+                // Note: stored "averageCosts" should be in PER UNIT (e.g. per 1 MMK) or PER BASIS?
+                // Let's store "Per Unit" cost internally for math consistency, 
+                // but if we store "Per Basis", we need to be careful everywhere.
+                // EASIEST: Store "Cost per 1 Unit" in averageCosts always.
+                // Rate passed in is "Per Basis". 
+                // Unit Price = Rate / Basis.
 
-                let newAvgCost = currentAvgCost;
+                const unitPrice = rate / basis;
+                let newAvgCost = currentAvgCost; // This is per-unit cost
 
-                // Only update WAC if we are adding positive amount
-                const totalValue = (currentAmount * currentAvgCost) + (amount * rate);
+                const currentTotalValue = currentAmount * currentAvgCost;
+                const newTotalValue = currentTotalValue + totalTHB;
                 const newTotalAmount = currentAmount + amount;
 
                 if (newTotalAmount > 0) {
-                    newAvgCost = totalValue / newTotalAmount;
+                    newAvgCost = newTotalValue / newTotalAmount;
                 } else {
-                    // Reset if 0 or negative (rare)
-                    newAvgCost = rate;
+                    newAvgCost = unitPrice;
                 }
 
                 setAverageCosts(prevCosts => ({
@@ -156,23 +187,25 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
 
             } else {
                 // Selling Foreign: Shop gives Foreign, gets THB
-                // Profit = (Sell Rate - Avg Cost) * Amount
+                // Profit = (Sell Price - Avg Cost) * Amount
+                // Sell Price (Total) = totalTHB
+                // Cost Basis (Total) = Avg Cost * Amount
 
-                // Use current avg cost. If 0 (no history), fallback to current Buy rate (conservative estimate)
-                const costBasis = currentAvgCost > 0 ? currentAvgCost : (rates[currency]?.buy || 0);
-                const txProfit = (rate - costBasis) * amount;
+                // If no history, assume current Sell Rate/Basis as cost (0 profit), or Buy Rate (conservative).
+                // Let's use current avg cost if valid.
+                let unitCost = currentAvgCost;
+                if (unitCost <= 0) {
+                    // Fallback: estimate from current BUY rate
+                    unitCost = (rates[currency]?.buy || 0) / basis;
+                }
+
+                const totalCost = amount * unitCost;
+                const txProfit = totalTHB - totalCost;
 
                 setProfit(prevP => prevP + txProfit);
 
                 newHoldings.THB += totalTHB;
                 newHoldings[currency] -= amount;
-
-                // WAC does not change on Sell (FIFO/Average Cost assumption),
-                // unless we want to handle "Selling all and resetting".
-                // If holdings go to 0, strict WAC says cost is still there until new buy, 
-                // but for practicality, if we go to 0, maybe we don't clear it yet, 
-                // as next buy will average it.
-                // However, if we go *negative*, WAC gets weird.
             }
             return newHoldings;
         });
@@ -188,7 +221,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     };
 
     return (
-        <CurrencyContext.Provider value={{ rates, setRates, holdings, transactions, addTransaction, profit, resetData }}>
+        <CurrencyContext.Provider value={{ rates, setRates, holdings, transactions, addTransaction, profit, resetData, updateHolding }}>
             {children}
         </CurrencyContext.Provider>
     );

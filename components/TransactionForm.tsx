@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useCurrency, Currency } from '@/context/CurrencyContext';
+import { useCurrency, Currency, getRateBasis } from '@/context/CurrencyContext';
 
 export default function TransactionForm() {
     const { rates, addTransaction, holdings } = useCurrency();
@@ -67,7 +67,8 @@ export default function TransactionForm() {
         // Keep rate as is
     };
 
-    const total = (parseFloat(amount) || 0) * (parseFloat(customRate) || 0);
+    const basis = getRateBasis(currency);
+    const total = ((parseFloat(amount) || 0) / basis) * (parseFloat(customRate) || 0);
 
     return (
         <div className="glass-card">

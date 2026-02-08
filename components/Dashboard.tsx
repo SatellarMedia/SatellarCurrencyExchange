@@ -1,20 +1,35 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useCurrency } from '@/context/CurrencyContext';
 import RateSetter from './RateSetter';
 import TransactionForm from './TransactionForm';
 import TransactionList from './TransactionList';
+import CapitalAdjustmentModal from './CapitalAdjustmentModal';
 
 export default function Dashboard() {
     const { holdings, profit } = useCurrency();
+    const [isEditingCapital, setIsEditingCapital] = useState(false);
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+            <CapitalAdjustmentModal
+                isOpen={isEditingCapital}
+                onClose={() => setIsEditingCapital(false)}
+            />
+
             {/* Holdings Card - Full Width */}
             <section className="col-span-1 md:col-span-12 glass-card">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold text-accent">Financial Status</h2>
+                    <div className="flex items-center gap-4">
+                        <h2 className="text-xl font-bold text-accent">Financial Status</h2>
+                        <button
+                            onClick={() => setIsEditingCapital(true)}
+                            className="bg-white/5 hover:bg-white/10 text-slate-300 px-2 py-1 rounded text-xs transition-colors border border-white/10"
+                        >
+                            Edit
+                        </button>
+                    </div>
                     <button
                         onClick={() => { if (confirm('Reset all data?')) window.location.reload(); }} // Simple reset trigger for now, better to use context reset
                         className="text-xs text-red-400 hover:text-red-300 transition-colors"

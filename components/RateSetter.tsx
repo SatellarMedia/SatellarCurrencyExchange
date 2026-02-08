@@ -59,6 +59,7 @@ export default function RateSetter() {
                         <div className="flex items-center space-x-2">
                             <span className={`w-2 h-2 rounded-full ${currency === 'USD' ? 'bg-emerald-400' : currency === 'CNY' ? 'bg-red-400' : 'bg-yellow-400'}`}></span>
                             <span className="font-bold">{currency}</span>
+                            {currency === 'MMK' && <span className="text-[10px] text-slate-500 uppercase ml-1">(Per 100k)</span>}
                         </div>
 
                         <input
