@@ -59,14 +59,14 @@ export const getRateBasis = (currency: String) => {
 const defaultRates: Rates = {
     USD: { buy: 34.0, sell: 34.5 },
     CNY: { buy: 4.8, sell: 4.9 },
-    MMK: { buy: 1500, sell: 1520 }, // NOW per 100,000 MMK
+    MMK: { buy: 775, sell: 800 }, // NOW per 100,000 MMK
 };
 
 const defaultHoldings: Holdings = {
-    THB: 1000000, // Initial capital example
+    THB: 30000, // Initial capital example
     USD: 0,
     CNY: 0,
-    MMK: 0,
+    MMK: 20000000,
 };
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
@@ -167,23 +167,25 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
                 // Unit Price = Rate / Basis.
 
                 const unitPrice = rate / basis;
-                let newAvgCost = currentAvgCost; // This is per-unit cost
 
+                // If this is the FIRST buy ever, or we previously edited to have inventory but no cost
                 let effectiveCurrentAvgCost = currentAvgCost;
                 if (effectiveCurrentAvgCost <= 0) {
-                    // Fallback so we don't treat existing zero-cost inventory as free
+                    // Fallback to the current buy rate per unit
                     effectiveCurrentAvgCost = (rates[currency]?.buy || 0) / basis;
                     if (effectiveCurrentAvgCost <= 0) effectiveCurrentAvgCost = unitPrice;
                 }
 
+                // Total historical THB value based on the effective cost
                 const currentTotalValue = currentAmount * effectiveCurrentAvgCost;
+                // Total THB value of this new transaction
                 const newTotalValue = currentTotalValue + totalTHB;
+                // Total new amount
                 const newTotalAmount = currentAmount + amount;
 
+                let newAvgCost = unitPrice;
                 if (newTotalAmount > 0) {
                     newAvgCost = newTotalValue / newTotalAmount;
-                } else {
-                    newAvgCost = unitPrice;
                 }
 
                 setAverageCosts(prevCosts => ({
