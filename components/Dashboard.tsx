@@ -81,9 +81,14 @@ export default function Dashboard() {
                         </button>
                         <button
                             onClick={() => {
-                                if (confirm('Reset all data?')) {
-                                    resetData();
-                                    window.location.reload();
+                                const enteredPin = prompt('Enter Reset PIN:');
+                                if (enteredPin === '001554') {
+                                    if (confirm('Are you sure you want to reset the profit to 0?')) {
+                                        resetData();
+                                        window.location.reload();
+                                    }
+                                } else if (enteredPin !== null) {
+                                    alert('Incorrect PIN.');
                                 }
                             }}
                             className="text-xs text-red-400 hover:text-red-300 transition-colors py-1.5"
@@ -124,12 +129,12 @@ export default function Dashboard() {
                         <div className="text-2xl font-mono text-yellow-400 font-bold">{holdings.MMK.toLocaleString()}</div>
                     </div>
                 </div>
-            </section>
+            </section >
 
             {/* Row 2: Rate Setter & Transaction Form */}
-            <section className="col-span-1 md:col-span-12 lg:col-span-4">
+            < section className="col-span-1 md:col-span-12 lg:col-span-4" >
                 <RateSetter />
-            </section>
+            </section >
 
             <section className="col-span-1 md:col-span-12 lg:col-span-5">
                 <TransactionForm />
@@ -140,6 +145,6 @@ export default function Dashboard() {
                 <TransactionList />
             </section>
 
-        </div>
+        </div >
     );
 }

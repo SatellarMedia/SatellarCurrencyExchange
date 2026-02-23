@@ -223,11 +223,9 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     };
 
     const resetData = () => {
-        setTransactions([]);
         setProfit(0);
 
         // Sync local storage immediately before any potential reload
-        localStorage.setItem('exchange_transactions', JSON.stringify([]));
         localStorage.setItem('exchange_profit', '0');
     };
 
