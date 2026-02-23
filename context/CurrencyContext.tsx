@@ -115,12 +115,14 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     const updateHolding = (currency: Currency, newAmount: number) => {
         setHoldings(prev => {
             const newHoldings = { ...prev, [currency]: newAmount };
-            // If updating THB, we might strictly mean the capital. 
-            // If updating Foreign, we might want to reset WAC? 
-            // For now, just update amount. WAC remains as history unless reset.
-            if (currency !== 'THB' && newAmount === 0) {
-                // Optional: Reset WAC if clearing stock?
-                // setAverageCosts(prevC => ({ ...prevC, [currency]: 0 }));
+            // If updating Foreign currency manually, reset its Average Cost to current market BUY rate 
+            // to prevent "free" inventory dragging down cost basis when new transactions occur.
+            if (currency !== 'THB') {
+                const basis = getRateBasis(currency);
+                setAverageCosts(prevC => ({
+                    ...prevC,
+                    [currency]: (rates[currency]?.buy || 0) / basis
+                }));
             }
             return newHoldings;
         });
@@ -167,7 +169,14 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
                 const unitPrice = rate / basis;
                 let newAvgCost = currentAvgCost; // This is per-unit cost
 
-                const currentTotalValue = currentAmount * currentAvgCost;
+                let effectiveCurrentAvgCost = currentAvgCost;
+                if (effectiveCurrentAvgCost <= 0) {
+                    // Fallback so we don't treat existing zero-cost inventory as free
+                    effectiveCurrentAvgCost = (rates[currency]?.buy || 0) / basis;
+                    if (effectiveCurrentAvgCost <= 0) effectiveCurrentAvgCost = unitPrice;
+                }
+
+                const currentTotalValue = currentAmount * effectiveCurrentAvgCost;
                 const newTotalValue = currentTotalValue + totalTHB;
                 const newTotalAmount = currentAmount + amount;
 

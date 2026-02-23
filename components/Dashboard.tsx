@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import * as XLSX from 'xlsx';
 import { useCurrency } from '@/context/CurrencyContext';
 import RateSetter from './RateSetter';
 import TransactionForm from './TransactionForm';
@@ -8,8 +9,46 @@ import TransactionList from './TransactionList';
 import CapitalAdjustmentModal from './CapitalAdjustmentModal';
 
 export default function Dashboard() {
-    const { holdings, profit } = useCurrency();
+    const { holdings, profit, resetData, transactions } = useCurrency();
     const [isEditingCapital, setIsEditingCapital] = useState(false);
+
+    const handleExportExcel = () => {
+        // 1. Prepare Overview Data
+        const overviewData = [
+            { "Metric": "THB (Capital)", "Value": holdings.THB },
+            { "Metric": "Realized Profit (THB)", "Value": profit },
+            { "Metric": "USD Holdings", "Value": holdings.USD },
+            { "Metric": "CNY Holdings", "Value": holdings.CNY },
+            { "Metric": "MMK Holdings", "Value": holdings.MMK },
+            { "Metric": "Total Transactions", "Value": transactions.length },
+        ];
+
+        // 2. Prepare Transactions Data
+        const txData = transactions.map(tx => ({
+            "Date & Time": new Date(tx.date).toLocaleString(),
+            "Type": tx.type,
+            "Currency": tx.currency,
+            "Amount": tx.amount,
+            "Exchange Rate": tx.rate,
+            "Total (THB)": tx.totalTHB
+        }));
+
+        // 3. Create Workbook & Sheets
+        const wb = XLSX.utils.book_new();
+        const wsOverview = XLSX.utils.json_to_sheet(overviewData);
+        const wsTx = XLSX.utils.json_to_sheet(txData);
+
+        // Styling columns width roughly
+        wsOverview['!cols'] = [{ wch: 25 }, { wch: 15 }];
+        wsTx['!cols'] = [{ wch: 25 }, { wch: 10 }, { wch: 10 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+
+        XLSX.utils.book_append_sheet(wb, wsOverview, "Daily Summary");
+        XLSX.utils.book_append_sheet(wb, wsTx, "Transactions Log");
+
+        // 4. Download file
+        const dateStr = new Date().toISOString().split('T')[0];
+        XLSX.writeFile(wb, `Currency_Exchange_Report_${dateStr}.xlsx`);
+    };
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
@@ -30,12 +69,28 @@ export default function Dashboard() {
                             Edit
                         </button>
                     </div>
-                    <button
-                        onClick={() => { if (confirm('Reset all data?')) window.location.reload(); }} // Simple reset trigger for now, better to use context reset
-                        className="text-xs text-red-400 hover:text-red-300 transition-colors"
-                    >
-                        Reset System
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={handleExportExcel}
+                            className="text-xs bg-green-600/20 hover:bg-green-600/40 text-green-400 border border-green-500/30 px-3 py-1.5 rounded transition-colors flex items-center gap-2"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            Save Daily Report
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (confirm('Reset all data?')) {
+                                    resetData();
+                                    window.location.reload();
+                                }
+                            }}
+                            className="text-xs text-red-400 hover:text-red-300 transition-colors py-1.5"
+                        >
+                            Reset System
+                        </button>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">

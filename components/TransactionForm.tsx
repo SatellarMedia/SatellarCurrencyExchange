@@ -14,7 +14,7 @@ export default function TransactionForm() {
 
     // Let's clarify in UI.
 
-    const [currency, setCurrency] = useState<Currency>('USD');
+    const [currency, setCurrency] = useState<Currency>('MMK');
     const [amount, setAmount] = useState<string>('');
     const [customRate, setCustomRate] = useState<string>(''); // Allow override? Request said "rate is manual" which usually means global manual, but sometimes per tx.
     // "rate is manual" in request: "currency is thb,mmk,cny,usd. rate is manual."
@@ -103,9 +103,9 @@ export default function TransactionForm() {
                         onChange={(e) => setCurrency(e.target.value as Currency)}
                         className="glass-input appearance-none"
                     >
+                        <option value="MMK">MMK (Myanmar Kyat)</option>
                         <option value="USD">USD (US Dollar)</option>
                         <option value="CNY">CNY (Chinese Yuan)</option>
-                        <option value="MMK">MMK (Myanmar Kyat)</option>
                     </select>
                 </div>
 
