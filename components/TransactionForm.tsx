@@ -16,6 +16,8 @@ export default function TransactionForm() {
 
     const [currency, setCurrency] = useState<Currency>('MMK');
     const [amount, setAmount] = useState<string>('');
+    const [total, setTotal] = useState<string>('');
+    const [lastEdited, setLastEdited] = useState<'amount' | 'total'>('amount');
     const [customRate, setCustomRate] = useState<string>(''); // Allow override? Request said "rate is manual" which usually means global manual, but sometimes per tx.
     // "rate is manual" in request: "currency is thb,mmk,cny,usd. rate is manual."
     // Logic: Default to global rate, but allow override if needed? Or just show global rate?
@@ -35,8 +37,37 @@ export default function TransactionForm() {
         }
     }, [type, currency, rates]);
 
+    useEffect(() => {
+        const basis = getRateBasis(currency);
+        const numRate = parseFloat(customRate);
+
+        if (isNaN(numRate) || numRate <= 0) return;
+
+        if (lastEdited === 'amount') {
+            const numAmount = parseFloat(amount);
+            if (!isNaN(numAmount)) {
+                setTotal(((numAmount / basis) * numRate).toFixed(2));
+            } else if (amount === '') {
+                setTotal('');
+            }
+        } else if (lastEdited === 'total') {
+            const numTotal = parseFloat(total);
+            if (!isNaN(numTotal)) {
+                setAmount(((numTotal / numRate) * basis).toFixed(2));
+            } else if (total === '') {
+                setAmount('');
+            }
+        }
+    }, [amount, total, customRate, currency, lastEdited]);
+
     const handleAmountChange = (val: string) => {
+        setLastEdited('amount');
         setAmount(val);
+    };
+
+    const handleTotalChange = (val: string) => {
+        setLastEdited('total');
+        setTotal(val);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -64,11 +95,9 @@ export default function TransactionForm() {
 
         addTransaction(type, currency, numAmount, numRate);
         setAmount('');
+        setTotal('');
         // Keep rate as is
     };
-
-    const basis = getRateBasis(currency);
-    const total = ((parseFloat(amount) || 0) / basis) * (parseFloat(customRate) || 0);
 
     return (
         <div className="glass-card">
@@ -135,13 +164,19 @@ export default function TransactionForm() {
                     />
                 </div>
 
-                {/* Total Display */}
-                <div className="p-4 bg-black/30 rounded-lg border border-white/5">
+                {/* Total Input */}
+                <div className="p-4 bg-black/30 rounded-lg border border-white/5 focus-within:border-white/20 transition-colors">
                     <div className="flex justify-between items-center">
-                        <span className="text-slate-400">Total (THB)</span>
-                        <span className={`text-xl font-bold ${type === 'BUY' ? 'text-blue-400' : 'text-green-400'}`}>
-                            {total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </span>
+                        <label className="text-slate-400">Total (THB)</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            value={total}
+                            onChange={(e) => handleTotalChange(e.target.value)}
+                            placeholder="0.00"
+                            className={`bg-transparent outline-none text-right text-xl font-bold w-1/2 min-w-0 ${type === 'BUY' ? 'text-blue-400' : 'text-green-400'}`}
+                            required
+                        />
                     </div>
                 </div>
 
